@@ -1,0 +1,17 @@
+# Whisper models - distributed through GitHub Releases
+dist/models/
+
+# Packaged executable - distributed through GitHub Releases
+dist/VoidEditorTranscript.exe
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Build/cache files
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini

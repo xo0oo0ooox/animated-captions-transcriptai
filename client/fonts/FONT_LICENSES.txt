@@ -1,0 +1,95 @@
+FONT LICENSES AND ATTRIBUTION
+==============================
+
+These font files are bundled with the project for use by the subtitle
+extension. The fonts are third-party assets and are NOT part of the
+project's own source-code license.
+
+The font files listed below are distributed under their respective
+upstream licenses. The original font files should not be modified or
+relicensed by this project.
+
+Font families
+-------------
+
+Archivo Black              — SIL Open Font License 1.1 (OFL-1.1)
+Bebas Neue                 — SIL Open Font License 1.1 (OFL-1.1)
+Cinzel                     — SIL Open Font License 1.1 (OFL-1.1)
+Cormorant Garamond         — SIL Open Font License 1.1 (OFL-1.1)
+Crimson Text               — SIL Open Font License 1.1 (OFL-1.1)
+Darker Grotesque           — SIL Open Font License 1.1 (OFL-1.1)
+EB Garamond                — SIL Open Font License 1.1 (OFL-1.1)
+Exo 2                      — SIL Open Font License 1.1 (OFL-1.1)
+Inter                      — SIL Open Font License 1.1 (OFL-1.1)
+Jost                       — SIL Open Font License 1.1 (OFL-1.1)
+Libre Baskerville          — SIL Open Font License 1.1 (OFL-1.1)
+Lora                       — SIL Open Font License 1.1 (OFL-1.1)
+Merriweather               — SIL Open Font License 1.1 (OFL-1.1)
+Metal Mania                — SIL Open Font License 1.1 (OFL-1.1)
+Michroma                   — SIL Open Font License 1.1 (OFL-1.1)
+Montserrat                 — SIL Open Font License 1.1 (OFL-1.1)
+Nunito                     — SIL Open Font License 1.1 (OFL-1.1)
+Open Sans                  — SIL Open Font License 1.1 (OFL-1.1)
+Orbitron                   — SIL Open Font License 1.1 (OFL-1.1)
+Pirata One                 — SIL Open Font License 1.1 (OFL-1.1)
+Playfair Display           — SIL Open Font License 1.1 (OFL-1.1)
+Rajdhani                   — SIL Open Font License 1.1 (OFL-1.1)
+Roboto                     — Apache License 2.0
+Sorts Mill Goudy           — SIL Open Font License 1.1 (OFL-1.1)
+Syncopate                  — SIL Open Font License 1.1 (OFL-1.1)
+UnifrakturMaguntia         — SIL Open Font License 1.1 (OFL-1.1)
+
+Attribution and source
+----------------------
+
+These font families are available through Google Fonts and their upstream
+font projects. Google Fonts states that each family directory contains
+the appropriate license file and that font files contain licensing and
+authorship metadata.
+
+Source:
+https://github.com/google/fonts
+
+Google Fonts documentation:
+https://googlefonts.github.io/gf-guide/metadata.html
+
+Important
+---------
+
+1. This file does NOT replace the original license text of any font.
+2. If an upstream license file (for example OFL.txt or LICENSE.txt) is
+   available for a font family, keep that license file with the font or
+   include it in the project's fonts/licenses directory.
+3. Do not remove or alter copyright, trademark, Reserved Font Name, or
+   other attribution information contained in the original font files.
+4. The subtitle project's own source code may be distributed under a
+   separate open-source license. That license does not change the
+   licensing terms of these third-party fonts.
+5. If a font file is replaced with a different version or obtained from
+   a source other than Google Fonts, its upstream license and attribution
+   should be checked again before redistribution.
+
+Reserved Font Names
+-------------------
+
+Some SIL OFL fonts may contain a Reserved Font Name requirement. This is
+relevant if the font itself is modified or renamed. The bundled font
+files in this project are intended to be distributed unchanged.
+
+License texts
+-------------
+
+SIL Open Font License 1.1:
+https://openfontlicense.org/
+
+Apache License 2.0:
+https://www.apache.org/licenses/LICENSE-2.0
+
+Copyright and authorship
+------------------------
+
+The copyright holders and designers vary by font family. The authoritative
+copyright and designer information is the metadata distributed with each
+upstream font family and, where present, inside the font file itself.
+
+This project does not claim ownership of any of the third-party fonts.

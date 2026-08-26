@@ -1,0 +1,31 @@
+Report created: 
+	13.04.2026	00:41:06
+
+Project name: void editor mogrt.aep
+
+Source files collected to: 
+	C:\Users\Pc\AppData\Local\Temp\aegraphic\6815e81b-2d51-42a5-bbbb-5310fb482114\collectprj
+
+Source files collected: For target comp
+
+Collected comps:  
+	Dinamik_Altyazı_Motoru
+	
+Number of collected files:  0
+
+Size of collected files:  0 KB
+
+Rendering plug-ins:
+	Classic 3D
+	
+Effects used:  2
+
+Effect:  Drop Shadow
+	
+Effect:  Slider Control
+	
+
+Layer:  Text Layer
+	External dependencies:  
+		Font family: “Arial”, Font style: “Regular”
+

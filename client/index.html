@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Whisper Engine</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="plugin-header">
+        <div class="plugin-logo">W</div>
+        <span class="plugin-title">Whisper Engine</span>
+        <span class="plugin-version">v1.0</span>
+
+        <nav class="top-menu">
+            <div class="menu-item">
+                <span class="menu-label">Settings</span>
+                <div class="menu-dropdown">
+                    <div class="dropdown-section-title">Line Breaks</div>
+                    <div class="dropdown-item dropdown-toggle-item">
+                        <span>Max Characters</span>
+                        <input type="number" id="max-chars" class="small-input" value="42" min="10" max="100" onchange="saveSettings()">
+                    </div>
+                    <div class="dropdown-item dropdown-toggle-item">
+                        <span>Max Words</span>
+                        <input type="number" id="max-words" class="small-input" value="7" min="1" max="20" onchange="saveSettings()">
+                    </div>
+                    <div class="option-row">
+                		<label>Max Lines</label>
+                		<select id="max-lines" class="half-select" onchange="saveSettings()">
+                    <option value="1">1</option>
+                    <option value="2" selected>2</option>
+                    <option value="3">3</option>
+                		</select>
+            		</div>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-label">About</span>
+                <div class="menu-dropdown">
+                    <div class="dropdown-about-logo">W</div>
+                    <div class="dropdown-about-title">Void Editor — Whisper Engine</div>
+                    <div class="dropdown-about-version">Version 1.0</div>
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-text">Developed by <strong>Aktuğ Antika</strong></div>
+                    <div class="dropdown-text">Part of the Void Editor suite.</div>
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-text" style="color: var(--muted)">© 2026 Void Software</div>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="main-layout">
+
+        <!-- ═══ LEFT PANEL ═══ -->
+<div class="panel-left">
+
+            <!-- TOP FIXED: Controls -->
+            <div class="panel-top-fixed">
+                <div class="section-label">Model</div>
+                <div class="option-row">
+                    <select id="model-select" class="full-select" onchange="saveSettings()">
+                        <option value="base">⚡ Base (fastest)</option>
+                        <option value="small" selected>✦ Small (recommended)</option>
+                        <option value="medium">🔷 Medium (most accurate)</option>
+                    </select>
+                </div>
+
+                <div class="section-label">Language</div>
+                <div class="option-row">
+                    <select id="language-select" class="full-select" onchange="saveSettings()">
+                        <option value="">Auto Detect</option>
+                        <option value="tr">Turkish</option>
+                        <option value="en">English</option>
+                        <option value="de">German</option>
+                        <option value="fr">French</option>
+                        <option value="es">Spanish</option>
+                        <option value="it">Italian</option>
+                        <option value="pt">Portuguese</option>
+                        <option value="ru">Russian</option>
+                        <option value="ja">Japanese</option>
+                        <option value="ko">Korean</option>
+                        <option value="zh">Chinese</option>
+                        <option value="ar">Arabic</option>
+                        <option value="hi">Hindi</option>
+                        <option value="nl">Dutch</option>
+                        <option value="pl">Polish</option>
+                        <option value="sv">Swedish</option>
+                        <option value="uk">Ukrainian</option>
+                    </select>
+                </div>
+
+                <div class="section-label">Line Settings</div>
+                <div class="option-row" style="display:flex; gap:6px;">
+                    <input type="number" id="max-chars" class="small-input" value="42" min="10" max="100" onchange="saveSettings()" title="Max characters per line">
+                    <input type="number" id="max-words" class="small-input" value="7" min="1" max="20" onchange="saveSettings()" title="Max words per line">
+                </div>
+                
+				<div class="section-label">Range</div>
+                <div class="option-row">
+                    <select id="transcribe-range" class="full-select" onchange="saveSettings()">
+                        <option value="all">📎 Entire Timeline</option>
+                        <option value="inout">✂️ In / Out Points</option>
+                    </select>
+                </div>
+                
+                <div class="section-label">Audio Track</div>
+                <div class="option-row">
+                    <select id="audio-track" class="full-select" onchange="saveSettings()">
+                        <option value="0">🔊 A1</option>
+                        <option value="1">🔊 A2</option>
+                        <option value="2">🔊 A3</option>
+                        <option value="3">🔊 A4</option>
+                    </select>
+                </div>
+                
+				<input
+                    type="file"
+                    id="import-srt-file"
+                    accept=".srt"
+                    style="display:none;"
+                    onchange="onImportSRTFile(event)"
+                />
+                <button
+                    id="btn-import-srt"
+                    class="btn-secondary"
+                    onclick="document.getElementById('import-srt-file').click()"
+                    style="width:100%; margin-bottom:6px;"
+                >
+                    ↑ Import SRT
+                </button>
+                <button id="btn-transcribe" class="btn-primary" onclick="runTranscription()">
+                    ▶ Start Transcription
+                </button>
+
+                <div id="progress-container" class="progress-container hidden">
+                    <div id="progress-bar" class="progress-bar" style="width:0%"></div>
+                </div>
+                <div id="status-bar" class="status-bar hidden"></div>
+            </div>
+
+            <!-- MIDDLE SCROLL: Transcript List -->
+            <div id="transcript-container" class="transcript-scroll-area hidden">
+                <div class="section-divider">
+                    <span>Transcript</span>
+                    <span id="transcript-count" class="list-count">0</span>
+                </div>
+                <div id="transcript-list" class="transcript-list"></div>
+            </div>
+
+            <!-- BOTTOM FIXED: Action Buttons -->
+            <div id="action-buttons-container" class="panel-bottom-fixed hidden">
+                <button id="btn-add-to-timeline" class="btn-primary" onclick="addToTimeline()" disabled>
+                    ✚ Add to Timeline
+                </button>
+                <button class="btn-secondary" onclick="exportSRT()">
+                    ↓ SRT
+                </button>
+            </div>
+
+        </div>
+        
+        <!-- ═══ RIGHT PANEL ═══ -->
+        <div class="panel-right">
+
+            <!-- Preview -->
+			<div class="preview-container" id="preview-container">
+                <div class="preview-screen" id="preview-screen">
+                    <div class="preview-caption" id="preview-caption" style="left:50%;top:85%;">
+                        Sample Caption Text
+                    </div>
+                </div>
+            </div>
+
+            <!-- Track Selection -->
+            <div class="section-label">Video Track</div>
+            <div class="option-row">
+                <select id="track-index" class="full-select" onchange="saveSettings()">
+                    <option value="1">V1</option>
+                    <option value="2">V2</option>
+                    <option value="3">V3</option>
+                    <option value="4" selected>V4</option>
+                </select>
+            </div>
+
+            <!-- Style Panel -->
+            <div class="section-label">Caption Style</div>
+
+            <!-- Highlight toggle -->
+            <div class="style-row" style="margin-bottom: 6px;">
+                <label class="highlight-toggle" title="Enable word highlight">
+                    <input type="checkbox" id="highlight-enabled" onchange="saveSettings()">
+                    <span class="toggle-track"></span>
+                    <span class="toggle-label">Word Highlight</span>
+                </label>
+            </div>
+
+            <!-- Font row -->
+			<div class="style-row">
+                <div class="font-dropdown-wrapper" id="font-dropdown-wrapper">
+                    <div class="font-dropdown-selected" id="font-dropdown-selected" onclick="toggleFontDropdown()">
+                        <span id="font-dropdown-label" style="font-family: Arial">Arial</span>
+                        <span class="font-dropdown-arrow">▼</span>
+                    </div>
+                    <div class="font-dropdown-list" id="font-dropdown-list"></div>
+                    <input type="hidden" id="font-family" value="Arial">
+                </div>
+                <div class="style-btn-group">
+                    <button id="btn-bold" class="style-btn" onclick="toggleStyleBtn('btn-bold')" title="Bold">B</button>
+                    <button id="btn-italic" class="style-btn" onclick="toggleStyleBtn('btn-italic')" title="Italic"><em>I</em></button>
+                </div>
+            </div>
+
+            <!-- Size -->
+            <div class="style-row">
+                <div class="size-control">
+                    <span class="size-label">Size</span>
+                    <input type="range" id="font-size" class="size-slider" min="20" max="120" value="60" onchange="saveSettings()" oninput="updateSizeLabel(this.value)">
+                    <span id="font-size-label" class="size-value">60</span>
+                </div>
+            </div>
+
+            <!-- Colors -->
+            <div class="style-row">
+                <div class="color-group">
+                    <div class="color-item" title="Text color">
+                        <span class="color-label">Text</span>
+                        <input type="color" id="text-color" value="#ffffff" onchange="saveSettings()">
+                    </div>
+                    <div class="color-item" title="Highlight color">
+                        <span class="color-label" style="color: var(--accent)">Highlight</span>
+                        <input type="color" id="highlight-color" value="#ff6b00" onchange="saveSettings()">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Outline -->
+            <div class="section-label">Outline</div>
+            <div class="style-row">
+                <label class="highlight-toggle">
+                    <input type="checkbox" id="outline-enabled" onchange="saveSettings()">
+                    <span class="toggle-track"></span>
+                </label>
+                <div class="color-item">
+                    <input type="color" id="outline-color" value="#000000" onchange="saveSettings()">
+                </div>
+                <div class="size-control" style="flex:1">
+                    <span class="size-label">Width</span>
+                    <input type="range" id="outline-width" class="size-slider" min="1" max="10" value="3" onchange="saveSettings()" oninput="document.getElementById('outline-width-label').textContent=this.value">
+                    <span id="outline-width-label" class="size-value">3</span>
+                </div>
+            </div>
+
+            <!-- Shadow -->
+            <div class="section-label">Shadow</div>
+            <div class="style-row" style="margin-bottom: 4px;">
+                <label class="highlight-toggle">
+                    <input type="checkbox" id="shadow-enabled" onchange="saveSettings()">
+                    <span class="toggle-track"></span>
+                </label>
+                <div class="color-item">
+                    <input type="color" id="shadow-color" value="#000000" onchange="saveSettings()">
+                </div>
+                <div class="size-control" style="flex:1">
+                    <span class="size-label">Opacity</span>
+                    <input type="range" id="shadow-opacity" class="size-slider" min="0" max="100" value="75" onchange="saveSettings()" oninput="document.getElementById('shadow-opacity-label').textContent=this.value">
+                    <span id="shadow-opacity-label" class="size-value">75</span>
+                </div>
+            </div>
+            <div class="style-row">
+                <div class="size-control" style="flex:1">
+                    <span class="size-label">Distance</span>
+                    <input type="range" id="shadow-distance" class="size-slider" min="0" max="20" value="5" onchange="saveSettings()" oninput="document.getElementById('shadow-distance-label').textContent=this.value">
+                    <span id="shadow-distance-label" class="size-value">5</span>
+                </div>
+                <div class="size-control" style="flex:1">
+                    <span class="size-label">Softness</span>
+                    <input type="range" id="shadow-softness" class="size-slider" min="0" max="30" value="5" onchange="saveSettings()" oninput="document.getElementById('shadow-softness-label').textContent=this.value">
+                    <span id="shadow-softness-label" class="size-value">5</span>
+                </div>
+            </div>
+
+            <!-- Background -->
+            <div class="section-label">Background</div>
+            <div class="style-row">
+                <label class="highlight-toggle">
+                    <input type="checkbox" id="bg-enabled" onchange="saveSettings()">
+                    <span class="toggle-track"></span>
+                </label>
+                <div class="color-item">
+                    <input type="color" id="bg-color" value="#000000" onchange="saveSettings()">
+                </div>
+                <div class="size-control" style="flex:1">
+                    <span class="size-label">Opacity</span>
+                    <input type="range" id="bg-opacity" class="size-slider" min="0" max="100" value="50" onchange="saveSettings()" oninput="document.getElementById('bg-opacity-label').textContent=this.value">
+                    <span id="bg-opacity-label" class="size-value">50</span>
+                </div>
+            </div>
+
+			<!-- Animation -->
+            <div class="section-label">Text Animation</div>
+            <div class="option-row">
+                <select id="text-anim" class="full-select" onchange="saveSettings()">
+                    <option value="0">None</option>
+                    <option value="1">Pop</option>
+                    <option value="2">Fade In</option>
+                    <option value="3">Slide Up</option>
+                    <option value="4">Slide Down</option>
+                    <option value="5">Bounce</option>
+                </select>
+            </div>
+
+            <div class="section-label">Highlight Animation</div>
+            <div class="option-row">
+                <select id="hl-anim" class="full-select" onchange="saveSettings()">
+                    <option value="0">None</option>
+                    <option value="1">Bounce</option>
+                    <option value="2">Shake</option>
+                    <option value="3">Glitch</option>
+                </select>
+            </div>
+
+        </div>
+    </div>
+
+    <script type="text/javascript" src="CSInterface.js"></script>
+    <script type="text/javascript" src="index.js"></script>
+</body>
+</html>
