@@ -43,81 +43,184 @@ import tempfile
 import subprocess
 
 
+
 def merge_clips_with_ffmpeg(clips, ffmpeg_path):
-    """Merge audio clips without exceeding Windows command-line limits."""
+    """Build timeline-aligned audio using unique media inputs."""
     import os
-    import shutil
     import tempfile
     import subprocess
 
     if not clips:
         raise ValueError("No audio clips to merge.")
 
+    sample_rate = 16000
     work_dir = tempfile.mkdtemp(prefix="void_merge_")
     output_path = os.path.join(work_dir, "merged.wav")
     filter_path = os.path.join(work_dir, "filter.txt")
 
-    try:
-        filter_parts = []
-        inputs = []
+    # Register each source media file only once.
+    media_indices = {}
+    media_paths = []
 
-        for i, clip in enumerate(clips):
-            media_path = clip["mediaPath"]
+    for clip in clips:
+        media_path = os.path.normpath(clip["mediaPath"])
 
-            if not os.path.isfile(media_path):
-                raise FileNotFoundError(
-                    "Media file not found: " + media_path
-                )
+        if not os.path.isfile(media_path):
+            raise FileNotFoundError(
+                "Media file not found: " + media_path
+            )
 
-            inputs.extend(["-i", media_path])
+        if media_path not in media_indices:
+            media_indices[media_path] = len(media_paths)
+            media_paths.append(media_path)
 
+    # Sort clips by their Premiere timeline positions.
+    sorted_clips = sorted(
+        clips,
+        key=lambda clip: float(clip.get("start", 0))
+    )
+
+    valid_clips = []
+
+    for clip in sorted_clips:
+        source_in = float(clip["in"])
+        source_out = float(clip["out"])
+        timeline_start = float(clip.get("start", 0))
+
+        if source_out <= source_in:
+            continue
+
+        valid_clips.append({
+            "mediaPath": os.path.normpath(clip["mediaPath"]),
+            "in": source_in,
+            "out": source_out,
+            "start": max(0.0, timeline_start)
+        })
+
+    if not valid_clips:
+        raise ValueError("No valid audio clips found.")
+
+    # Use the first clip's position as the audio time origin.
+    timeline_origin = min(
+        clip["start"] for clip in valid_clips
+    )
+
+    filter_parts = []
+    source_groups = {}
+
+    for clip in valid_clips:
+        media_path = clip["mediaPath"]
+        source_groups.setdefault(media_path, []).append(clip)
+
+    # Split each unique source into independent audio branches.
+    branch_map = {}
+
+    for media_path, group in source_groups.items():
+        input_idx = media_indices[media_path]
+        branch_labels = [
+            "src{}_{}".format(input_idx, i)
+            for i in range(len(group))
+        ]
+
+        if len(branch_labels) == 1:
             filter_parts.append(
-                "[{}:a]atrim=start={}:end={},"
-                "asetpts=PTS-STARTPTS[a{}]".format(
-                    i, clip["in"], clip["out"], i
+                "[{}:a]anull[{}]".format(
+                    input_idx, branch_labels[0]
+                )
+            )
+        else:
+            filter_parts.append(
+                "[{}:a]asplit={}[{}]".format(
+                    input_idx,
+                    len(branch_labels),
+                    "][".join(branch_labels)
                 )
             )
 
-        concat_inputs = "".join(
-            "[a{}]".format(i) for i in range(len(clips))
+        for i, clip in enumerate(group):
+            branch_map[id(clip)] = branch_labels[i]
+
+    # Trim and position each clip on the Premiere timeline.
+    mix_labels = []
+
+    for i, clip in enumerate(valid_clips):
+        branch = branch_map[id(clip)]
+        delay_ms = round(
+            (clip["start"] - timeline_origin) * 1000
         )
+
+        output_label = "clip{}".format(i)
+
 
         filter_parts.append(
-            concat_inputs +
-            "concat=n={}:v=0:a=1[out]".format(len(clips))
-        )
-
-        with open(filter_path, "w", encoding="utf-8") as f:
-            f.write(";\n".join(filter_parts))
-
-        cmd = (
-            [ffmpeg_path, "-hide_banner", "-loglevel", "error"]
-            + inputs
-            + [
-                "-filter_complex_script", filter_path,
-                "-map", "[out]",
-                "-y", output_path
-            ]
-        )
-
-        result = subprocess.run(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            errors="replace"
-        )
-
-        if result.returncode != 0:
-            raise RuntimeError(
-                "FFmpeg merge failed: " + result.stderr[-3000:]
+            "[{}]atrim=start={:.6f}:end={:.6f},"
+            "asetpts=PTS-STARTPTS,"
+            "aresample={},"
+            "aformat=sample_fmts=fltp:"
+            "channel_layouts=mono,"
+            "adelay={}:all=1[{}]".format(
+                branch,
+                clip["in"],
+                clip["out"],
+                sample_rate,
+                delay_ms,
+                output_label
             )
+        )
 
-        return output_path
 
-    finally:
-        if os.path.isfile(filter_path):
-            os.remove(filter_path)
+        mix_labels.append("[{}]".format(output_label))
+
+    # Mix positioned clips and preserve silence between them.
+    if len(mix_labels) == 1:
+        filter_parts.append(
+            "{}anull[out]".format(mix_labels[0])
+        )
+    else:
+        filter_parts.append(
+            "{}amix=inputs={}:duration=longest:"
+            "normalize=0[out]".format(
+                "".join(mix_labels),
+                len(mix_labels)
+            )
+        )
+
+    with open(filter_path, "w", encoding="utf-8") as f:
+        f.write(";\n".join(filter_parts))
+
+    cmd = [
+        ffmpeg_path,
+        "-hide_banner",
+        "-loglevel", "error"
+    ]
+
+    for media_path in media_paths:
+        cmd.extend(["-i", media_path])
+
+    cmd.extend([
+        "-filter_complex_script", filter_path,
+        "-map", "[out]",
+        "-ar", str(sample_rate),
+        "-ac", "1",
+        "-c:a", "pcm_s16le",
+        "-y", output_path
+    ])
+
+    result = subprocess.run(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        errors="replace"
+    )
+
+    if result.returncode != 0:
+        raise RuntimeError(
+            "FFmpeg timeline merge failed: " +
+            result.stderr[-3000:]
+        )
+
+    return output_path
 
 
 clips_data = params.get('clips', None)
