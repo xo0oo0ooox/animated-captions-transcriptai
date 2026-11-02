@@ -42,30 +42,83 @@ FILE_PATH  = args.path
 import tempfile
 import subprocess
 
+
 def merge_clips_with_ffmpeg(clips, ffmpeg_path):
-    """ffmpeg ile clip parcalarini birlestirir, gecici dosya dondurur"""
-    tmp = tempfile.NamedTemporaryFile(suffix='.wav', delete=False)
-    tmp.close()
+    """Merge audio clips without exceeding Windows command-line limits."""
+    import os
+    import shutil
+    import tempfile
+    import subprocess
 
-    filter_parts = []
-    inputs = []
-    for i, clip in enumerate(clips):
-        inputs += ['-i', clip['mediaPath']]
-        filter_parts.append('[{}:a]atrim=start={}:end={},asetpts=PTS-STARTPTS[a{}]'.format(
-            i, clip['in'], clip['out'], i
-        ))
+    if not clips:
+        raise ValueError("No audio clips to merge.")
 
-    filter_parts.append(''.join(['[a{}]'.format(i) for i in range(len(clips))]) +
-                        'concat=n={}:v=0:a=1[out]'.format(len(clips)))
+    work_dir = tempfile.mkdtemp(prefix="void_merge_")
+    output_path = os.path.join(work_dir, "merged.wav")
+    filter_path = os.path.join(work_dir, "filter.txt")
 
-    cmd = [ffmpeg_path] + inputs + [
-        '-filter_complex', ';'.join(filter_parts),
-        '-map', '[out]',
-        '-y', tmp.name
-    ]
+    try:
+        filter_parts = []
+        inputs = []
 
-    subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    return tmp.name
+        for i, clip in enumerate(clips):
+            media_path = clip["mediaPath"]
+
+            if not os.path.isfile(media_path):
+                raise FileNotFoundError(
+                    "Media file not found: " + media_path
+                )
+
+            inputs.extend(["-i", media_path])
+
+            filter_parts.append(
+                "[{}:a]atrim=start={}:end={},"
+                "asetpts=PTS-STARTPTS[a{}]".format(
+                    i, clip["in"], clip["out"], i
+                )
+            )
+
+        concat_inputs = "".join(
+            "[a{}]".format(i) for i in range(len(clips))
+        )
+
+        filter_parts.append(
+            concat_inputs +
+            "concat=n={}:v=0:a=1[out]".format(len(clips))
+        )
+
+        with open(filter_path, "w", encoding="utf-8") as f:
+            f.write(";\n".join(filter_parts))
+
+        cmd = (
+            [ffmpeg_path, "-hide_banner", "-loglevel", "error"]
+            + inputs
+            + [
+                "-filter_complex_script", filter_path,
+                "-map", "[out]",
+                "-y", output_path
+            ]
+        )
+
+        result = subprocess.run(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            errors="replace"
+        )
+
+        if result.returncode != 0:
+            raise RuntimeError(
+                "FFmpeg merge failed: " + result.stderr[-3000:]
+            )
+
+        return output_path
+
+    finally:
+        if os.path.isfile(filter_path):
+            os.remove(filter_path)
+
 
 clips_data = params.get('clips', None)
 tmp_file = None
