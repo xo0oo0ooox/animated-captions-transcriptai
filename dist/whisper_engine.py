@@ -104,13 +104,12 @@ except Exception as e:
 try:
     total_duration = 0
     segments, info = model.transcribe(
-        FILE_PATH,
-        language=LANGUAGE if LANGUAGE else None,
-        word_timestamps=True,
-        vad_filter=True,
-        vad_parameters=dict(min_silence_duration_ms=500),
-        progress_callback=lambda current, total: print(json.dumps({"progress": current / total}))
-    )
+    FILE_PATH,
+    language=LANGUAGE if LANGUAGE else None,
+    word_timestamps=True,
+    vad_filter=True,
+    vad_parameters=dict(min_silence_duration_ms=500)
+)
     total_duration = info.duration
     print(json.dumps({"duration": total_duration}))
 except Exception as e:
